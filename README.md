@@ -1,5 +1,5 @@
 # Day-Night Cycle
-----------------------------
+
 
 An Easy and Simple solution for day-night cycle in Unity game engine.
 
@@ -21,15 +21,14 @@ You may also lower the *Reflection Intensity* to get get darker scenes during ni
 Tested in the 5.5 beta but should work in previous versions too.
 Procedural Skybox material is needed.
 
--------------------
 
-## TODO (maybe)
 
-- Presets
-- Range sliders for min-max variables
-- Quick method that returns in game time(hours:minutes:seconds)
+## TODO
 
----------
+* [ ] Presets **(maybe)**
+* [ ] Range sliders for min-max variables
+* [ ] Quick method that returns in game time(hours:minutes:seconds)
+
 
 ## License
 
