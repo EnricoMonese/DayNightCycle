@@ -27,7 +27,5 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
-[Image1]: http://www.edraflame.com/daynightcycle-github-images/inspector.png
-[Image2]: http://www.edraflame.com/daynightcycle-github-images/lighting-settings.png
-[Image3]: http://www.edraflame.com/daynightcycle-github-images/screen.png
-[Kino]: https://github.com/search?q=kino+user%3Akeijiro&type=Repositories
+[Image1]: /gradient.gif
+[Image2]: /skybox.gif
