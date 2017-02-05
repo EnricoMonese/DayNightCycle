@@ -2,20 +2,78 @@
 using System;
 using System.Collections.Generic;
 using Random = UnityEngine.Random;
+using UnityEditor;
 
 public class DayNightCycleGradient : MonoBehaviour
 {
 
-	public Gradient m_backdropColor;
-	public Shader m_shader;
+	public Gradient m_daytimeBackground;
+	public Gradient m_nightimeBackground;
+	public Material m_vertexShaderMaterial;
 	public LayerMask mask = -1;
-	public Vector4 m_elevationsTopDown = new Vector4 (.577f, .3f, -.1f, -.3f);
-	public float m_width = 1f;
 
-	private Camera m_mainCamera;
-	private Camera m_backgroundCamera;
-	private Mesh msh;
+	public Light sun;
+	public Light moon;
+	[Tooltip ("How many seconds make up a day in game time?")]
+	public float secondsInFullDay = 120f;
+	[Tooltip ("How often do we update the scene in real seconds? (only fires once during Start() function)")]
+	public float updateRateInSeconds = 5f;
+	[Tooltip ("Normalized time of day – noon is .5")]
+	[Range (0, 1)]
+	public float currentTimeOfDay = 0.45f;
+	[Tooltip ("Normal speed of a day is 1, slow down the day cycle using < 1, speed up the day cycle > 1")]
+	public float timeMultiplier = 1f;
+	[Tooltip ("Left is midnight, right is noon")]
+	[Space (10)]
+	public Gradient nightDayColor;
+	public float maxIntensity = 2f;
+	public float minIntensity = 0f;
+	[Tooltip ("Normalized time of day to hit minimum intensity")]
+	public float minPoint = -0.2f;
+	public float maxBounceIntensity = 1.0f;
+	public float minBounceIntensity = 0.5f;
+	public float maxAmbient = 1f;
+	public float minAmbient = 0f;
+	[Tooltip ("Normalized time of day to hit minimum ambient")]
+	public float minAmbientPoint = -0.2f;
+	[Tooltip ("Left is midnight, right is noon")]
+	public Gradient nightDayFogColor;
+	[Tooltip ("Left is midnight, right is noon")]
+	public AnimationCurve fogDensityCurve;
+	[Tooltip ("Multiply density curve by this value")]
+	public float fogScale = 1f;
 
+	public GameObject gradientPlane;
+
+	Camera m_mainCamera;
+	Camera m_backgroundCamera;
+
+	#if UNITY_EDITOR
+	[HideInInspector]
+	public bool showSettings = false;
+
+	public void UpdateEditor ()
+	{
+		UpdatePosition ();
+		UpdateFX ();
+	}
+
+	public void MakePlaneBasedOnGradient ()
+	{
+		CreatePlaneMesh[] editors = (CreatePlaneMesh[])Resources.FindObjectsOfTypeAll (typeof(CreatePlaneMesh));
+		if (editors.Length > 0) {
+			gradientPlane = editors [0].MakeMyPlane (1, m_daytimeBackground.colorKeys.Length, 1, 1, m_daytimeBackground);
+			SetPlaneMaterial (gradientPlane);
+			SetUpBackgroundCamera ();
+		} else {
+			CreatePlaneMesh cpmesh = this.gameObject.AddComponent<CreatePlaneMesh> ();
+			gradientPlane = cpmesh.MakeMyPlane (1, m_daytimeBackground.colorKeys.Length, 1, 1, m_daytimeBackground);
+			SetPlaneMaterial (gradientPlane);
+			SetUpBackgroundCamera ();
+		}
+	}
+
+	#endif
 	void Start ()
 	{
 		m_mainCamera = Camera.main;
@@ -25,43 +83,134 @@ public class DayNightCycleGradient : MonoBehaviour
 			return;
 		}
 
+		InvokeRepeating ("UpdateCycle", updateRateInSeconds, updateRateInSeconds);
+
+	}
+
+
+	void UpdateCycle ()
+	{
+		UpdatePosition ();
+		UpdateFX ();
+
+		currentTimeOfDay += ((Time.deltaTime + updateRateInSeconds) / secondsInFullDay) * timeMultiplier;
+
+		if (currentTimeOfDay >= 1) {
+			currentTimeOfDay = 0;
+		}
+	}
+
+	void UpdatePosition ()
+	{
+		sun.transform.localRotation = Quaternion.Euler ((currentTimeOfDay * 360f) - 90, 170, 0);
+	}
+
+	void UpdateFX ()
+	{
+		float tRange = 1 - minPoint;
+		float dot = Mathf.Clamp01 ((Vector3.Dot (sun.transform.forward, Vector3.down) - minPoint) / tRange);
+		float intensity = ((maxIntensity - minIntensity) * dot) + minIntensity;
+		sun.intensity = intensity;
+		if (moon != null)
+			moon.intensity = 1 - intensity;
+
+		intensity = ((maxBounceIntensity - minBounceIntensity) * dot) + minBounceIntensity;
+		sun.bounceIntensity = intensity;
+
+		tRange = 1 - minAmbientPoint;
+		dot = Mathf.Clamp01 ((Vector3.Dot (sun.transform.forward, Vector3.down) - minAmbientPoint) / tRange);
+		intensity = ((maxAmbient - minAmbient) * dot) + minAmbient;
+		RenderSettings.ambientIntensity = intensity;
+
+		sun.color = nightDayColor.Evaluate (dot);
+		RenderSettings.ambientLight = sun.color;
+
+		RenderSettings.fogColor = nightDayFogColor.Evaluate (dot);
+		RenderSettings.fogDensity = fogDensityCurve.Evaluate (dot) * fogScale;
+
+		if (m_nightimeBackground.colorKeys.Length == m_daytimeBackground.colorKeys.Length) {
+
+			Color[] colors = new Color[m_daytimeBackground.colorKeys.Length];
+
+			for (int i = 0; i < colors.Length; i++) {
+
+				float backgroundOffset = currentTimeOfDay - .5f; // this makes slider value .5f "noon" or 0 to be the daytime gradient
+				backgroundOffset = Mathf.Abs (backgroundOffset) * 2; //by making all values positive, we gradually increase after hitting 0. Multiply by 2 insures that we end up at 1
+				//when the slider is at 0 or 1, and 0 when the slider is at .5
+
+				Color32 newColor = Color32.Lerp (m_daytimeBackground.colorKeys [i].color, m_nightimeBackground.colorKeys [i].color, backgroundOffset);
+				colors [i] = newColor;
+			}
+
+			RenderSettings.ambientGroundColor = colors [0];
+			RenderSettings.ambientEquatorColor = colors [colors.Length / 2];
+			RenderSettings.ambientSkyColor = colors [colors.Length - 1];
+
+			if (gradientPlane != null)
+				UpdateVerticeColors (gradientPlane.GetComponent<MeshFilter> ().sharedMesh, colors);
+
+
+			//Debug.Log (RenderSettings.ambientEquatorColor.ToString ());
+		} else {
+
+			Debug.LogWarning ("Gradients do not have matching number of color keys, not evaluating for ambient colors or updating the background - The daytime gradient has " + m_daytimeBackground.colorKeys.Length
+			+ " color keys, and the night gradient has " + m_nightimeBackground.colorKeys.Length);
+		}
+	}
+
+	#region Background Mesh Creation
+
+	void SetPlaneMaterial (GameObject go)
+	{
+		Renderer mrendr = go.GetComponent<Renderer> ();
+		mrendr.material = m_vertexShaderMaterial;
+		UpdateVerticeColors (go.GetComponent<MeshFilter> ().sharedMesh, ColorsFromGradient (m_daytimeBackground));
+	}
+
+	Color[] ColorsFromGradient (Gradient g)
+	{
+		Color[] colors = new Color[g.colorKeys.Length];
+
+		for (int c = 0; c < colors.Length; c++) {
+			colors [c] = g.colorKeys [c].color;
+		}
+
+		return colors;
+	}
+
+	void SetUpBackgroundCamera ()
+	{
+		string backgroundCamName = "Background Camera";
+		m_mainCamera = Camera.main;
+
+		if (!m_mainCamera) {
+			Debug.LogError ("Must tag a camera as the main camera for this to work!");
+			return;
+		}
+
+		if (m_backgroundCamera != null)
+			DestroyImmediate (m_backgroundCamera.gameObject);
+
+		GameObject checkDoublecheck = GameObject.Find (backgroundCamName);
+
+		if (checkDoublecheck != null)
+			DestroyImmediate (checkDoublecheck);
+
 		m_mainCamera.clearFlags = CameraClearFlags.Depth;
 		m_mainCamera.cullingMask = ~mask.value;
-		m_backgroundCamera = Instantiate (m_mainCamera, m_mainCamera.transform);
-		Destroy (m_backgroundCamera.GetComponent<AudioListener> ());
-		m_backgroundCamera.depth = m_mainCamera.depth - 1;
+		GameObject bgCam = new GameObject (backgroundCamName);
+		bgCam.transform.SetParent (m_mainCamera.transform, false);
+		m_backgroundCamera = bgCam.AddComponent<Camera> () as Camera;
+		m_backgroundCamera.clearFlags = CameraClearFlags.Depth;
+		m_backgroundCamera.depth = m_mainCamera.depth - 10;
 		m_backgroundCamera.cullingMask = mask;
 
-		//msh = MakeBackdropMesh (m_backdropColor);
-
-		Material mat = new Material (m_shader);
-
-		GameObject gradientPlane = CreatePlane (m_backdropColor);
 		gradientPlane.transform.SetParent (m_backgroundCamera.transform, false);
 
 		gradientPlane.layer = 8;//This is the first user setable layer, which the example is named "background"
 
 		ScaleToFitScreen (gradientPlane.transform);
 
-		//InvokeRepeating ("UpdateColors", Random.Range (0f, LevelManager.instance.m_progress.smoothness), LevelManager.instance.m_progress.smoothness);
-	}
-
-
-
-
-	void UpdateColors ()
-	{
-//		float progress = .1f;
-//
-////		Color top = Color.Lerp (m_startColors [0], m_endColors [0], progress);
-////		Color mid = Color.Lerp (m_startColors [1], m_endColors [1], progress);
-////		Color horizon = Color.Lerp (m_startColors [2], m_endColors [2], progress);
-////		Color bottom = Color.Lerp (m_startColors [3], m_endColors [3], progress);
-////
-////		if (msh != null)
-////			msh.colors = new Color[8] { top, top, mid, mid, horizon, horizon, bottom, bottom };
-////
-//		//RenderSettings.ambientLight = mid;
 	}
 
 	void ScaleToFitScreen (Transform t)
@@ -76,104 +225,26 @@ public class DayNightCycleGradient : MonoBehaviour
 		t.localScale = new Vector3 (h * m_mainCamera.aspect, h, 0f);
 	}
 
-
-	GameObject CreatePlane (Gradient g)
+	void UpdateVerticeColors (Mesh m, Color[] colors)
 	{
+		Vector3[] vertices = m.vertices;
 
-		int widthSegments = 1;
-		int lengthSegments = g.colorKeys.Length;
-		int width = 1;
-		int length = 1;
-		Material mat = new Material (m_shader);
-
-		GameObject plane = new GameObject ("Plane", typeof(MeshFilter), typeof(MeshRenderer));
- 
-		plane.transform.position = Vector3.zero;
- 
- 
-		MeshFilter meshFilter = plane.GetComponent<MeshFilter> ();
-		Renderer mrendr = plane.GetComponent<Renderer> ();
-		mrendr.material = mat;
-		Mesh m = new Mesh ();
- 
-		m = new Mesh ();
-		m.name = plane.name;
-
- 
-		int hCount2 = widthSegments + 1;
-		int vCount2 = lengthSegments + 1;
-		int numTriangles = widthSegments * lengthSegments * 6;
-
-		int numVertices = hCount2 * vCount2;
- 
-		Vector3[] vertices = new Vector3[numVertices];
-		Vector2[] uvs = new Vector2[numVertices];
-		int[] triangles = new int[numTriangles];
-		Vector4[] tangents = new Vector4[numVertices];
-		Vector4 tangent = new Vector4 (1f, 0f, 0f, -1f);
- 
-		int index = 0;
-		float uvFactorX = 1.0f / widthSegments;
-		float uvFactorY = 1.0f / lengthSegments;
-		float scaleX = (width * 1.0f) / (widthSegments * 1.0f);
-		float scaleY = (length * 1.0f) / (lengthSegments * 1.0f);
-
-		//Debug.Log (scaleX.ToString ("F4") + ", " + scaleY.ToString ("F4"));
-
-		for (int y = 0; y < vCount2; y++) {
-			for (int x = 0; x < hCount2; x++) {
-
-				int keys = y;
-				if (keys >= g.colorKeys.Length)
-					keys = g.colorKeys.Length - 1;
-
-				float yVector = y * scaleY - length / 2f;
-				float yAltVector = g.colorKeys [keys].time - length / 2f;
-
-				//Debug.Log ("YVector is " + yVector.ToString ("F4") + ", alt is " + yAltVector.ToString ("F4"));
-
-				vertices [index] = new Vector3 (x * scaleX - width / 2f, yAltVector, 0.0f);
-
-				tangents [index] = tangent;
-				uvs [index++] = new Vector2 (x * uvFactorX, y * uvFactorY);
-			}
-		}
-
-		index = 0;
-
-		for (int y = 0; y < lengthSegments; y++) {
-			for (int x = 0; x < widthSegments; x++) {
-				triangles [index] = (y * hCount2) + x;
-				triangles [index + 1] = ((y + 1) * hCount2) + x;
-				triangles [index + 2] = (y * hCount2) + x + 1;
- 
-				triangles [index + 3] = ((y + 1) * hCount2) + x;
-				triangles [index + 4] = ((y + 1) * hCount2) + x + 1;
-				triangles [index + 5] = (y * hCount2) + x + 1;
-				index += 6;
-			}
-		}
+		m.vertices = vertices;
 
 		Color[] m_colors = new Color[vertices.Length];
 
 		for (int i = 0; i < m_colors.Length; i++) {
 
 			int c = i / 2;
-			if (c >= g.colorKeys.Length)
-				c = g.colorKeys.Length - 1;
+			if (c >= colors.Length)
+				c = colors.Length - 1;
 
-			m_colors [i] = g.colorKeys [c].color;
+			m_colors [i] = colors [c];
 		}
 
-		m.vertices = vertices;
 		m.colors = m_colors;
-		m.uv = uvs;
-		m.triangles = triangles;
-		m.tangents = tangents;
-		meshFilter.sharedMesh = m;
-		m.RecalculateBounds ();
-
-		return plane;
 	}
+
+	#endregion
 
 }
