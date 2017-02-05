@@ -1,7 +1,6 @@
 # Day-Night Cycle
 
- 
-<img src="/skybox.gif" height="226" width="444"> <img src="/gradient.gif" height="226" width="444">
+ <img src="/gradient.gif" height="226" width="444">
 
 This is my forked version of Enrico Moneso's DayNightCycle. The skybox version is mostly identical to Enrico's. I added a version to use a gradient backdrop instead of the skybox procedural shader. The procedural skybox gives you very little control over the horizon line and adds a lot of complexity in terms of atmosphere and color. In my case, the sky never looks the color I actually want it to be. And, when doing realtime changes, I believe changing the skybox might have more performance overhead compared to using a gradient for global illumination.
 
