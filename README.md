@@ -1,8 +1,15 @@
 # Day-Night Cycle
 
-![gif][Image1] ![gif][Image2]
+![Skybox Image](/skybox.gif) ![Gradient Image](/gradient.gif) 
+This is my forked version of Enrico Moneso's DayNightCycle. The skybox version is mostly identical to Enrico's. I added a version to use a gradient backdrop instead of the skybox procedural shader. The procedural skybox gives you very little control over the horizon line and adds a lot of complexity in terms of atmosphere and color. In my case, the sky never looks the color I actually want it to be. And, when doing realtime changes, I believe changing the skybox might have more performance overhead compared to using a gradient for global illumination.
+
+The gradient versions give you more control over how the sky looks, good when you are making a 2D game or want more of a backdrop and less of a real atmosphere. The gradient you supply is used to build a new mesh based on where you've put the keys in your gradient. The resulting mesh is then matched to those keys, and vertex colors are assigned to the mesh for use by a simple vertex shader. Should be performant, even on mobile.  To render the backdrop, a new camera is made that matches your current camera, layers are set up and the new camera only renders the background image.
+
+Video below shows it in action:
 
 [![Alt text](https://img.youtube.com/vi/2SMf9vSy2IQ/0.jpg)](https://www.youtube.com/watch?v=2SMf9vSy2IQ)
+
+For further instructions, visit the version on Enrico's git page.
 
 ## License
 
@@ -30,5 +37,3 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
-[Image1]: /gradient.gif
-[Image2]: /skybox.gif
