@@ -1,34 +1,5 @@
 # Day-Night Cycle
-
-
-An Easy and Simple solution for day-night cycle in Unity game engine.
-
-![Screen][Image3]
-
-## How to use
-
-To use simply import *DayNightCycle.cs* and *Editor/DayNightCycleEditor.cs* into your project.
-Assign *DayNightCycle.cs* to a directional light in your scene and play around with the settings.
-Then assign your Directional light and a procedural skybox material in the *Lighting Settings*.
-You may also lower the *Reflection Intensity* to get get darker scenes during night.
-
-![Screen][Image1]
-![Screen][Image2]
-
-
-## Requirements
-
-Tested in the 5.5 beta but should work in previous versions too.
-Procedural Skybox material is needed.
-
-
-
-## TODO
-
-* [ ] Presets **(maybe)**
-* [ ] Range sliders for min-max variables
-* [ ] Quick method that returns in game time(hours:minutes:seconds)
-
+[![Alt text](https://img.youtube.com/vi/2SMf9vSy2IQ/0.jpg)](https://www.youtube.com/watch?v=2SMf9vSy2IQ)
 
 ## License
 
