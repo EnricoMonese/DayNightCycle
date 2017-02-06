@@ -201,6 +201,16 @@ public class DayNightCycleGradient : MonoBehaviour
 		GameObject bgCam = new GameObject (backgroundCamName);
 		bgCam.transform.SetParent (m_mainCamera.transform, false);
 		m_backgroundCamera = bgCam.AddComponent<Camera> () as Camera;
+		m_backgroundCamera.allowHDR = m_mainCamera.allowHDR;
+		m_backgroundCamera.allowMSAA = m_mainCamera.allowMSAA;
+		m_backgroundCamera.orthographic = m_mainCamera.orthographic;
+		if (m_backgroundCamera.orthographic) {
+			m_backgroundCamera.orthographicSize = m_mainCamera.orthographicSize;
+		} else {
+			m_backgroundCamera.fieldOfView = m_mainCamera.fieldOfView;
+		}
+		m_backgroundCamera.nearClipPlane = m_mainCamera.nearClipPlane;
+		m_backgroundCamera.farClipPlane = m_mainCamera.farClipPlane;
 		m_backgroundCamera.clearFlags = CameraClearFlags.Depth;
 		m_backgroundCamera.depth = m_mainCamera.depth - 10;
 		m_backgroundCamera.cullingMask = mask;
