@@ -1,3 +1,19 @@
+![GitHub stars](https://img.shields.io/github/stars/enricomonese/DayNightCycle?style=social)
+![GitHub forks](https://img.shields.io/github/forks/enricomonese/DayNightCycle?style=social)
+![GitHub watchers](https://img.shields.io/github/watchers/enricomonese/DayNightCycle?style=social)
+![GitHub followers](https://img.shields.io/github/followers/enricomonese?style=social)
+
+
+![GitHub repo size](https://img.shields.io/github/repo-size/enricomonese/DayNightCycle)
+![GitHub language count](https://img.shields.io/github/languages/count/enricomonese/DayNightCycle)
+![GitHub top language](https://img.shields.io/github/languages/top/enricomonese/DayNightCycle)
+![GitHub repo license](https://img.shields.io/github/license/enricomonese/DayNightCycle)
+![GitHub last commit](https://img.shields.io/github/last-commit/enricomonese/DayNightCycle)
+
+<span class="badge-patreon">
+<a href="https://patreon.com/enricomonese" target="_blank" title="Support this project using Patreon"><img src="https://img.shields.io/badge/patreon-donate-F96854.svg?logo=patreon" alt="Patreon donate button" height="20px"/></a>
+</span>
+
 # Day-Night Cycle
 
 
@@ -29,7 +45,9 @@ Procedural Skybox material is needed.
 * [ ] Range sliders for min-max variables
 * [ ] Quick method that returns in game time(hours:minutes:seconds)
 
-<a href="https://www.buymeacoffee.com/enrico" target="_blank"><img src="https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a>
+<span class="badge-patreon">
+<a href="https://patreon.com/enricomonese" target="_blank" title="Support this project using Patreon"><img src="https://img.shields.io/badge/patreon-donate-F96854.svg?logo=patreon" alt="Patreon donate button" height="28px"/></a>
+</span>
 
 [Image1]: http://www.edraflame.com/daynightcycle-github-images/inspector.png
 [Image2]: http://www.edraflame.com/daynightcycle-github-images/lighting-settings.png
